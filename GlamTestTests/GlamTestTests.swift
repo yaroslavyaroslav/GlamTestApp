@@ -10,7 +10,7 @@ import XCTest
 
 final class GlamTestTests: XCTestCase {
 
-    lazy var videoProcessor: VideoTemplateProcessor = VideoTemplateProcessor()
+    lazy var videoProcessor: VideoTemplateComposer = VideoTemplateComposer()
     let imageNames = ["image-0", "image-1", "image-2", "image-3", "image-4", "image-5", "image-5", "image-6", "image-7"]
 
     override func setUpWithError() throws {

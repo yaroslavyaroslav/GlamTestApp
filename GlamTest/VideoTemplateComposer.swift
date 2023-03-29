@@ -11,13 +11,13 @@ import CoreML
 import Vision
 import os
 
-private let myLog = Logger(subsystem: "Services", category: "VideoTemplateProcessor")
+private let logger = Logger(subsystem: "Services", category: "VideoTemplateComposer")
 
-class VideoTemplateProcessor {
+class VideoTemplateComposer {
     // Later make something cooler.
     private let outputSize = CGSize(width: 1024, height: 1024)
 
-    func createPixelBuffer(from image: UIImage?, size: CGSize) -> CVPixelBuffer? {
+    private func createPixelBuffer(from image: UIImage?, size: CGSize) -> CVPixelBuffer? {
         guard let image = image else { return nil }
 
         let attrs: [String: Any] = [
@@ -43,23 +43,29 @@ class VideoTemplateProcessor {
         return pixelBuffer
     }
 
-    func appendPixelBuffers(writerInput: AVAssetWriterInput, adaptor: AVAssetWriterInputPixelBufferAdaptor, frameDuration: CMTime, imageNames: [String], currentFrame: Int) async -> Bool {
+    private func appendPixelBuffers(writerInput: AVAssetWriterInput, adaptor: AVAssetWriterInputPixelBufferAdaptor, frameDuration: CMTime, imageNames: [String], currentFrame: Int) async -> Bool {
         if writerInput.isReadyForMoreMediaData && currentFrame < imageNames.count {
+
+            logger.debug("Processing \(currentFrame)")
+
             let image = UIImage(named: imageNames[currentFrame])
             if let pixelBuffer = createPixelBuffer(from: image, size: outputSize) {
+                logger.debug("Appending pixelBuffer for frame \(currentFrame)")
                 adaptor.append(pixelBuffer, withPresentationTime: CMTimeMultiply(frameDuration, multiplier: Int32(currentFrame)))
                 let nextFrame = currentFrame + 1
                 return await appendPixelBuffers(writerInput: writerInput, adaptor: adaptor, frameDuration: frameDuration, imageNames: imageNames, currentFrame: nextFrame)
             }
         } else if currentFrame >= imageNames.count {
+            logger.debug("Reached the end of images list.")
             return true
         }
-
+        logger.error("Failed to appending pixelBuffer for frame \(currentFrame)")
         return false
     }
 
     func processVideoFrames(imageNames: [String]) async -> URL? {
         guard !imageNames.isEmpty else {
+            logger.error("Failed: no images provided.")
             return nil
         }
 
@@ -94,9 +100,11 @@ class VideoTemplateProcessor {
             videoWriterInput.markAsFinished()
             await videoWriter.finishWriting()
             if videoWriter.status == .completed {
+                logger.debug("Proceed successfully.")
                 return outputFileURL
             }
         }
+        logger.error("Failed to appendPixelBuffers")
         return nil
     }
 }
