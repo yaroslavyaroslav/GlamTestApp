@@ -43,19 +43,19 @@ class VideoTemplateComposer {
         return pixelBuffer
     }
 
-    private func appendPixelBuffers(writerInput: AVAssetWriterInput, adaptor: AVAssetWriterInputPixelBufferAdaptor, frameDuration: CMTime, imageNames: [String], currentFrame: Int) async -> Bool {
-        if writerInput.isReadyForMoreMediaData && currentFrame < imageNames.count {
+    func appendPixelBuffers(writerInput: AVAssetWriterInput, adaptor: AVAssetWriterInputPixelBufferAdaptor, frameDuration: CMTime, images: [UIImage], currentFrame: Int) async -> Bool {
+        if writerInput.isReadyForMoreMediaData && currentFrame < images.count {
 
             logger.debug("Processing \(currentFrame)")
 
-            let image = UIImage(named: imageNames[currentFrame])
+            let image = images[currentFrame]
             if let pixelBuffer = createPixelBuffer(from: image, size: outputSize) {
                 logger.debug("Appending pixelBuffer for frame \(currentFrame)")
                 adaptor.append(pixelBuffer, withPresentationTime: CMTimeMultiply(frameDuration, multiplier: Int32(currentFrame)))
                 let nextFrame = currentFrame + 1
-                return await appendPixelBuffers(writerInput: writerInput, adaptor: adaptor, frameDuration: frameDuration, imageNames: imageNames, currentFrame: nextFrame)
+                return await appendPixelBuffers(writerInput: writerInput, adaptor: adaptor, frameDuration: frameDuration, images: images, currentFrame: nextFrame)
             }
-        } else if currentFrame >= imageNames.count {
+        } else if currentFrame >= images.count {
             logger.debug("Reached the end of images list.")
             return true
         }
@@ -63,15 +63,15 @@ class VideoTemplateComposer {
         return false
     }
 
-    func processVideoFrames(imageNames: [String]) async -> URL? {
-        guard !imageNames.isEmpty else {
+    func processVideoFrames(images: [UIImage]) async -> URL? {
+        guard !images.isEmpty else {
             logger.error("Failed: no images provided.")
             return nil
         }
 
         let outputFileURL = URL(fileURLWithPath: NSTemporaryDirectory() + "output.mp4")
 
-        try! FileManager.default.removeItem(at: outputFileURL)
+        try? FileManager.default.removeItem(at: outputFileURL)
 
         let videoWriter = try! AVAssetWriter(outputURL: outputFileURL, fileType: .mp4)
         let videoSettings: [String: Any] = [
@@ -96,7 +96,7 @@ class VideoTemplateComposer {
         let frameDuration = CMTime(value: 1, timescale: 1)
         let initialFrame = 0
 
-        if await appendPixelBuffers(writerInput: videoWriterInput, adaptor: pixelBufferAdaptor, frameDuration: frameDuration, imageNames: imageNames, currentFrame: initialFrame) {
+        if await appendPixelBuffers(writerInput: videoWriterInput, adaptor: pixelBufferAdaptor, frameDuration: frameDuration, images: images, currentFrame: initialFrame) {
             videoWriterInput.markAsFinished()
             await videoWriter.finishWriting()
             if videoWriter.status == .completed {

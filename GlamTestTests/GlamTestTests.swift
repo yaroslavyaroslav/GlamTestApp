@@ -11,10 +11,11 @@ import XCTest
 final class GlamTestTests: XCTestCase {
 
     lazy var videoProcessor: VideoTemplateComposer = VideoTemplateComposer()
+    lazy var imageProcessor: ImageProcessor = ImageProcessor()
     let imageNames = ["image-0", "image-1", "image-2", "image-3", "image-4", "image-5", "image-5", "image-6", "image-7"]
     let modelName = "segmentation_8bit"
 
-    lazy var images: [UIImage] = {
+    lazy var initialImages: [UIImage] = {
         imageNames.compactMap { UIImage(named: $0, in: Bundle.main, compatibleWith: nil) }
     }()
 
@@ -27,11 +28,13 @@ final class GlamTestTests: XCTestCase {
     }
 
     func testProcessVideoFrames() async {
-        XCTAssert(images.count == imageNames.count, "Failed to load images from asset catalog")
+        XCTAssert(initialImages.count == imageNames.count, "Failed to load images from asset catalog")
 
         let expectation = self.expectation(description: "Video processing completed")
 
-        if let outputURL = await videoProcessor.processVideoFrames(imageNames: imageNames) {
+        let expandedImages = await appendVideoWithMLProcessedFrames(images: initialImages)
+
+        if let outputURL = await videoProcessor.processVideoFrames(images: expandedImages) {
             print("result: \(outputURL.absoluteString)")
             expectation.fulfill()
         } else {
@@ -44,7 +47,7 @@ final class GlamTestTests: XCTestCase {
     }
 
     func testProcessPhoto() async {
-        for (index, image) in images.enumerated() {
+        for (index, image) in initialImages.enumerated() {
             let processedImage = await imageProcessor.processImage(inputImage: image, modelName: modelName)
             print(saveImageToTmpFolder(image: processedImage!, filename: String(index)))
         }
@@ -65,3 +68,19 @@ fileprivate func saveImageToTmpFolder(image: UIImage, filename: String) -> URL? 
         return nil
     }
 }
+
+fileprivate func appendVideoWithMLProcessedFrames(images: [UIImage]) async -> [UIImage] {
+    var resultImages: [UIImage] = []
+
+    for imageToProcess in images {
+        if resultImages.isEmpty {
+            resultImages.append(imageToProcess)
+        } else {
+            let extractedObjectImage = await ImageProcessor().processImage(inputImage: imageToProcess, modelName: "segmentation_8bit")!
+            resultImages.append(extractedObjectImage)
+            resultImages.append(imageToProcess)
+        }
+    }
+    return resultImages
+}
+
