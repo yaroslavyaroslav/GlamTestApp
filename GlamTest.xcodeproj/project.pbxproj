@@ -11,7 +11,20 @@
 		5C90E61C29D38692004EC68B /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5C90E61B29D38692004EC68B /* ContentView.swift */; };
 		5C90E61E29D38693004EC68B /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 5C90E61D29D38693004EC68B /* Assets.xcassets */; };
 		5C90E62129D38693004EC68B /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 5C90E62029D38693004EC68B /* Preview Assets.xcassets */; };
+		5C90E62829D457A5004EC68B /* VideoTemplateProcessor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5C90E62729D457A5004EC68B /* VideoTemplateProcessor.swift */; };
+		5C90E62A29D45B2D004EC68B /* segmentation_8bit.mlmodel in Sources */ = {isa = PBXBuildFile; fileRef = 5C90E62929D45B2D004EC68B /* segmentation_8bit.mlmodel */; };
+		5C90E63329D45D5A004EC68B /* GlamTestTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5C90E63229D45D5A004EC68B /* GlamTestTests.swift */; };
 /* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		5C90E63429D45D5A004EC68B /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 5C90E60E29D38692004EC68B /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 5C90E61529D38692004EC68B;
+			remoteInfo = GlamTest;
+		};
+/* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
 		5C90E61629D38692004EC68B /* GlamTest.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = GlamTest.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -19,10 +32,21 @@
 		5C90E61B29D38692004EC68B /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		5C90E61D29D38693004EC68B /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		5C90E62029D38693004EC68B /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
+		5C90E62729D457A5004EC68B /* VideoTemplateProcessor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoTemplateProcessor.swift; sourceTree = "<group>"; };
+		5C90E62929D45B2D004EC68B /* segmentation_8bit.mlmodel */ = {isa = PBXFileReference; lastKnownFileType = file.mlmodel; path = segmentation_8bit.mlmodel; sourceTree = "<group>"; };
+		5C90E63029D45D5A004EC68B /* GlamTestTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = GlamTestTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		5C90E63229D45D5A004EC68B /* GlamTestTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlamTestTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
 		5C90E61329D38692004EC68B /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		5C90E62D29D45D5A004EC68B /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -36,6 +60,7 @@
 			isa = PBXGroup;
 			children = (
 				5C90E61829D38692004EC68B /* GlamTest */,
+				5C90E63129D45D5A004EC68B /* GlamTestTests */,
 				5C90E61729D38692004EC68B /* Products */,
 			);
 			sourceTree = "<group>";
@@ -44,6 +69,7 @@
 			isa = PBXGroup;
 			children = (
 				5C90E61629D38692004EC68B /* GlamTest.app */,
+				5C90E63029D45D5A004EC68B /* GlamTestTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -51,9 +77,10 @@
 		5C90E61829D38692004EC68B /* GlamTest */ = {
 			isa = PBXGroup;
 			children = (
+				5C90E62B29D45B42004EC68B /* Resuorces */,
 				5C90E61929D38692004EC68B /* GlamTestApp.swift */,
 				5C90E61B29D38692004EC68B /* ContentView.swift */,
-				5C90E61D29D38693004EC68B /* Assets.xcassets */,
+				5C90E62729D457A5004EC68B /* VideoTemplateProcessor.swift */,
 				5C90E61F29D38693004EC68B /* Preview Content */,
 			);
 			path = GlamTest;
@@ -65,6 +92,23 @@
 				5C90E62029D38693004EC68B /* Preview Assets.xcassets */,
 			);
 			path = "Preview Content";
+			sourceTree = "<group>";
+		};
+		5C90E62B29D45B42004EC68B /* Resuorces */ = {
+			isa = PBXGroup;
+			children = (
+				5C90E62929D45B2D004EC68B /* segmentation_8bit.mlmodel */,
+				5C90E61D29D38693004EC68B /* Assets.xcassets */,
+			);
+			path = Resuorces;
+			sourceTree = "<group>";
+		};
+		5C90E63129D45D5A004EC68B /* GlamTestTests */ = {
+			isa = PBXGroup;
+			children = (
+				5C90E63229D45D5A004EC68B /* GlamTestTests.swift */,
+			);
+			path = GlamTestTests;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -87,6 +131,24 @@
 			productReference = 5C90E61629D38692004EC68B /* GlamTest.app */;
 			productType = "com.apple.product-type.application";
 		};
+		5C90E62F29D45D5A004EC68B /* GlamTestTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 5C90E63629D45D5A004EC68B /* Build configuration list for PBXNativeTarget "GlamTestTests" */;
+			buildPhases = (
+				5C90E62C29D45D5A004EC68B /* Sources */,
+				5C90E62D29D45D5A004EC68B /* Frameworks */,
+				5C90E62E29D45D5A004EC68B /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				5C90E63529D45D5A004EC68B /* PBXTargetDependency */,
+			);
+			name = GlamTestTests;
+			productName = GlamTestTests;
+			productReference = 5C90E63029D45D5A004EC68B /* GlamTestTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -99,6 +161,10 @@
 				TargetAttributes = {
 					5C90E61529D38692004EC68B = {
 						CreatedOnToolsVersion = 14.3;
+					};
+					5C90E62F29D45D5A004EC68B = {
+						CreatedOnToolsVersion = 14.3;
+						TestTargetID = 5C90E61529D38692004EC68B;
 					};
 				};
 			};
@@ -116,6 +182,7 @@
 			projectRoot = "";
 			targets = (
 				5C90E61529D38692004EC68B /* GlamTest */,
+				5C90E62F29D45D5A004EC68B /* GlamTestTests */,
 			);
 		};
 /* End PBXProject section */
@@ -130,6 +197,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		5C90E62E29D45D5A004EC68B /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
@@ -137,12 +211,30 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				5C90E62829D457A5004EC68B /* VideoTemplateProcessor.swift in Sources */,
+				5C90E62A29D45B2D004EC68B /* segmentation_8bit.mlmodel in Sources */,
 				5C90E61C29D38692004EC68B /* ContentView.swift in Sources */,
 				5C90E61A29D38692004EC68B /* GlamTestApp.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		5C90E62C29D45D5A004EC68B /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				5C90E63329D45D5A004EC68B /* GlamTestTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		5C90E63529D45D5A004EC68B /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 5C90E61529D38692004EC68B /* GlamTest */;
+			targetProxy = 5C90E63429D45D5A004EC68B /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		5C90E62229D38693004EC68B /* Debug */ = {
@@ -317,6 +409,42 @@
 			};
 			name = Release;
 		};
+		5C90E63729D45D5A004EC68B /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 5KNF7B55U4;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = yaroslavyarshin.GlamTestTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/GlamTest.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/GlamTest";
+			};
+			name = Debug;
+		};
+		5C90E63829D45D5A004EC68B /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 5KNF7B55U4;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = yaroslavyarshin.GlamTestTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/GlamTest.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/GlamTest";
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -334,6 +462,15 @@
 			buildConfigurations = (
 				5C90E62529D38693004EC68B /* Debug */,
 				5C90E62629D38693004EC68B /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		5C90E63629D45D5A004EC68B /* Build configuration list for PBXNativeTarget "GlamTestTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				5C90E63729D45D5A004EC68B /* Debug */,
+				5C90E63829D45D5A004EC68B /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
