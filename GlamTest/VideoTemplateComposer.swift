@@ -107,14 +107,76 @@ class VideoTemplateComposer {
         let initialFrame = 0
 
         if await appendPixelBuffers(writerInput: videoWriterInput, adaptor: pixelBufferAdaptor, frameDuration: frameDuration, images: images, currentFrame: initialFrame) {
-            videoWriterInput.markAsFinished()
-            await videoWriter.finishWriting()
-            if videoWriter.status == .completed {
-                logger.debug("Proceed successfully.")
-                return outputFileURL
+                videoWriterInput.markAsFinished()
+                await videoWriter.finishWriting()
+                if videoWriter.status == .completed {
+                    logger.debug("Video processing completed.")
+
+                    // Load audio asset and merge it with the video
+                    guard let audioAsset = loadAudioAsset(),
+                          let outputWithAudioURL = merge(videoURL: outputFileURL, audioAsset: audioAsset) else {
+                        logger.error("Failed to merge audio with video.")
+                        return nil
+                    }
+
+                    logger.debug("Audio merged successfully.")
+                    return outputWithAudioURL
+                }
             }
-        }
         logger.error("Failed to appendPixelBuffers")
         return nil
+    }
+
+    func merge(videoURL: URL, audioAsset: AVAsset) -> URL? {
+        let mixComposition = AVMutableComposition()
+
+        guard let videoAsset = AVAsset(url: videoURL) as? AVURLAsset,
+              let videoTrack = mixComposition.addMutableTrack(withMediaType: .video, preferredTrackID: kCMPersistentTrackID_Invalid),
+              let audioTrack = mixComposition.addMutableTrack(withMediaType: .audio, preferredTrackID: kCMPersistentTrackID_Invalid) else {
+            return nil
+        }
+
+        do {
+            try videoTrack.insertTimeRange(CMTimeRangeMake(start: .zero, duration: videoAsset.duration), of: videoAsset.tracks(withMediaType: .video)[0], at: .zero)
+            try audioTrack.insertTimeRange(CMTimeRangeMake(start: .zero, duration: videoAsset.duration), of: audioAsset.tracks(withMediaType: .audio)[0], at: .zero)
+        } catch {
+            logger.error("Error merging video and audio tracks: \(error)")
+            return nil
+        }
+
+        let outputURL = URL(fileURLWithPath: NSTemporaryDirectory() + "output_with_audio.mp4")
+        try? FileManager.default.removeItem(at: outputURL)
+
+        guard let assetExport = AVAssetExportSession(asset: mixComposition, presetName: AVAssetExportPresetHighestQuality) else {
+            return nil
+        }
+
+        assetExport.outputFileType = .mp4
+        assetExport.outputURL = outputURL
+        assetExport.shouldOptimizeForNetworkUse = true
+
+        let semaphore = DispatchSemaphore(value: 0)
+        var exportSuccess = false
+
+        assetExport.exportAsynchronously {
+            if assetExport.status == .completed {
+                exportSuccess = true
+            } else {
+                logger.error("Failed to export merged video and audio: \(String(describing: assetExport.error))")
+            }
+            semaphore.signal()
+        }
+
+        semaphore.wait()
+
+        return exportSuccess ? outputURL : nil
+    }
+
+    func loadAudioAsset() -> AVAsset? {
+        guard let audioURL = Bundle.main.url(forResource: "music", withExtension: "aac") else {
+            logger.error("Failed to find the audio file in resources.")
+            return nil
+        }
+        return AVAsset(url: audioURL)
     }
 }
