@@ -43,17 +43,27 @@ class VideoTemplateComposer {
         return pixelBuffer
     }
 
-    func appendPixelBuffers(writerInput: AVAssetWriterInput, adaptor: AVAssetWriterInputPixelBufferAdaptor, frameDuration: CMTime, images: [UIImage], currentFrame: Int) async -> Bool {
+    func appendPixelBuffers(writerInput: AVAssetWriterInput, adaptor: AVAssetWriterInputPixelBufferAdaptor, frameDuration: CMTime, images: [UIImage], currentFrame: Int, lastImage: UIImage? = nil) async -> Bool {
         if writerInput.isReadyForMoreMediaData && currentFrame < images.count {
 
             logger.debug("Processing \(currentFrame)")
 
-            let image = images[currentFrame]
+            var image = images[currentFrame]
+
+            if let lastImage = lastImage {
+                UIGraphicsBeginImageContextWithOptions(outputSize, false, 1)
+                lastImage.draw(at: .zero)
+                image.draw(at: .zero, blendMode: .normal, alpha: 1.0)
+                image = UIGraphicsGetImageFromCurrentImageContext() ?? image
+                UIGraphicsEndImageContext()
+            }
+
             if let pixelBuffer = createPixelBuffer(from: image, size: outputSize) {
                 logger.debug("Appending pixelBuffer for frame \(currentFrame)")
                 adaptor.append(pixelBuffer, withPresentationTime: CMTimeMultiply(frameDuration, multiplier: Int32(currentFrame)))
                 let nextFrame = currentFrame + 1
-                return await appendPixelBuffers(writerInput: writerInput, adaptor: adaptor, frameDuration: frameDuration, images: images, currentFrame: nextFrame)
+
+                return await appendPixelBuffers(writerInput: writerInput, adaptor: adaptor, frameDuration: frameDuration, images: images, currentFrame: nextFrame, lastImage: image)
             }
         } else if currentFrame >= images.count {
             logger.debug("Reached the end of images list.")

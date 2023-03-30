@@ -47,9 +47,11 @@ final class GlamTestTests: XCTestCase {
     }
 
     func testProcessPhoto() async {
-        for (index, image) in initialImages.enumerated() {
-            let processedImage = await imageProcessor.processImage(inputImage: image, modelName: modelName)
-            print(saveImageToTmpFolder(image: processedImage!, filename: String(index)))
+        let size = CGSize(width: 1024, height: 1024)
+        let appendedImages = await appendVideoWithMLProcessedFrames(images: initialImages)
+
+        for (index, image) in appendedImages.enumerated() {
+            print(saveImageToTmpFolder(image: image, filename: String(index)))
         }
     }
 }
@@ -71,14 +73,17 @@ fileprivate func saveImageToTmpFolder(image: UIImage, filename: String) -> URL? 
 
 fileprivate func appendVideoWithMLProcessedFrames(images: [UIImage]) async -> [UIImage] {
     var resultImages: [UIImage] = []
+    let size = CGSize(width: 1024, height: 1024)
 
     for imageToProcess in images {
+        let resizedImage = imageToProcess.resizedToSquare(size: size)
         if resultImages.isEmpty {
-            resultImages.append(imageToProcess)
+            resultImages.append(resizedImage)
         } else {
-            let extractedObjectImage = await ImageProcessor().processImage(inputImage: imageToProcess, modelName: "segmentation_8bit")!
-            resultImages.append(extractedObjectImage)
-            resultImages.append(imageToProcess)
+            let heatmap = await ImageProcessor().processImage(inputImage: resizedImage, modelName: "segmentation_8bit")!
+            let extractedImage = ImageProcessor().applyHeatMapThreshold(image: resizedImage, heatMap: heatmap)
+            resultImages.append(extractedImage!)
+            resultImages.append(resizedImage)
         }
     }
     return resultImages

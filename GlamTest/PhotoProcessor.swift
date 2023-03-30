@@ -8,6 +8,7 @@
 import UIKit
 import CoreML
 import Vision
+import CoreImage
 import os
 
 private let logger = Logger(subsystem: "Services", category: "ImageProcessor")
@@ -54,6 +55,36 @@ class ImageProcessor {
             let handler = VNImageRequestHandler(cgImage: resizedImage.cgImage!, options: [:])
             try! handler.perform([request])
         }
+    }
+
+    func applyHeatMapThreshold(image: UIImage, heatMap: UIImage, threshold: CGFloat = 0.5) -> UIImage? {
+        guard let imageCI = CIImage(image: image),
+              let heatMapCI = CIImage(image: heatMap),
+              image.size == heatMap.size else {
+            print("Failed on imageRef")
+            return nil
+        }
+
+        let thresholdFilter = CIFilter(name: "CIColorThreshold")!
+        thresholdFilter.setValue(heatMapCI, forKey: kCIInputImageKey)
+        thresholdFilter.setValue(threshold, forKey: "inputThreshold")
+
+        let thresholdedImage = thresholdFilter.outputImage!
+
+        let blendFilter = CIFilter(name: "CIBlendWithMask")!
+        blendFilter.setValue(imageCI, forKey: kCIInputImageKey)
+        blendFilter.setValue(thresholdedImage, forKey: kCIInputMaskImageKey)
+        blendFilter.setValue(CIImage.empty(), forKey: kCIInputBackgroundImageKey)
+
+        let outputImage = blendFilter.outputImage!
+
+        let context = CIContext(options: nil)
+        guard let cgImage = context.createCGImage(outputImage, from: outputImage.extent) else {
+            print("Failed to create CGImage")
+            return nil
+        }
+
+        return UIImage(cgImage: cgImage)
     }
 }
 
