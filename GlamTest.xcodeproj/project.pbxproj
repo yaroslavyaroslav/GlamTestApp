@@ -14,8 +14,9 @@
 		5C90E62829D457A5004EC68B /* VideoTemplateComposer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5C90E62729D457A5004EC68B /* VideoTemplateComposer.swift */; };
 		5C90E62A29D45B2D004EC68B /* segmentation_8bit.mlmodel in Sources */ = {isa = PBXBuildFile; fileRef = 5C90E62929D45B2D004EC68B /* segmentation_8bit.mlmodel */; };
 		5C90E63329D45D5A004EC68B /* GlamTestTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5C90E63229D45D5A004EC68B /* GlamTestTests.swift */; };
-		5C90E63A29D4ABE4004EC68B /* PhotoProcessor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5C90E63929D4ABE4004EC68B /* PhotoProcessor.swift */; };
+		5C90E63A29D4ABE4004EC68B /* UIImage+Extension.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5C90E63929D4ABE4004EC68B /* UIImage+Extension.swift */; };
 		5CB6658B29D5D4FF006397A1 /* music.aac in Resources */ = {isa = PBXBuildFile; fileRef = 5CB6658A29D5D169006397A1 /* music.aac */; };
+		5CB6658D29D61D80006397A1 /* AVAsset+Extension.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5CB6658C29D61D80006397A1 /* AVAsset+Extension.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -38,8 +39,9 @@
 		5C90E62929D45B2D004EC68B /* segmentation_8bit.mlmodel */ = {isa = PBXFileReference; lastKnownFileType = file.mlmodel; path = segmentation_8bit.mlmodel; sourceTree = "<group>"; };
 		5C90E63029D45D5A004EC68B /* GlamTestTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = GlamTestTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		5C90E63229D45D5A004EC68B /* GlamTestTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlamTestTests.swift; sourceTree = "<group>"; };
-		5C90E63929D4ABE4004EC68B /* PhotoProcessor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhotoProcessor.swift; sourceTree = "<group>"; };
+		5C90E63929D4ABE4004EC68B /* UIImage+Extension.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UIImage+Extension.swift"; sourceTree = "<group>"; };
 		5CB6658A29D5D169006397A1 /* music.aac */ = {isa = PBXFileReference; lastKnownFileType = file; path = music.aac; sourceTree = "<group>"; };
+		5CB6658C29D61D80006397A1 /* AVAsset+Extension.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AVAsset+Extension.swift"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -85,7 +87,8 @@
 				5C90E61929D38692004EC68B /* GlamTestApp.swift */,
 				5C90E61B29D38692004EC68B /* ContentView.swift */,
 				5C90E62729D457A5004EC68B /* VideoTemplateComposer.swift */,
-				5C90E63929D4ABE4004EC68B /* PhotoProcessor.swift */,
+				5CB6658C29D61D80006397A1 /* AVAsset+Extension.swift */,
+				5C90E63929D4ABE4004EC68B /* UIImage+Extension.swift */,
 				5C90E61F29D38693004EC68B /* Preview Content */,
 			);
 			path = GlamTest;
@@ -218,11 +221,12 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				5C90E63A29D4ABE4004EC68B /* PhotoProcessor.swift in Sources */,
+				5C90E63A29D4ABE4004EC68B /* UIImage+Extension.swift in Sources */,
 				5C90E62829D457A5004EC68B /* VideoTemplateComposer.swift in Sources */,
 				5C90E62A29D45B2D004EC68B /* segmentation_8bit.mlmodel in Sources */,
 				5C90E61C29D38692004EC68B /* ContentView.swift in Sources */,
 				5C90E61A29D38692004EC68B /* GlamTestApp.swift in Sources */,
+				5CB6658D29D61D80006397A1 /* AVAsset+Extension.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -17,32 +17,6 @@ class VideoTemplateComposer {
     // Later make something cooler.
     private let outputSize = CGSize(width: 1024, height: 1024)
 
-    private func createPixelBuffer(from image: UIImage?, size: CGSize) -> CVPixelBuffer? {
-        guard let image = image else { return nil }
-
-        let attrs: [String: Any] = [
-            kCVPixelBufferCGImageCompatibilityKey as String: true,
-            kCVPixelBufferCGBitmapContextCompatibilityKey as String: true
-        ]
-
-        var pixelBuffer: CVPixelBuffer?
-        let status = CVPixelBufferCreate(kCFAllocatorDefault, Int(size.width), Int(size.height), kCVPixelFormatType_32ARGB, attrs as CFDictionary, &pixelBuffer)
-        guard status == kCVReturnSuccess else { return nil }
-
-        CVPixelBufferLockBaseAddress(pixelBuffer!, CVPixelBufferLockFlags(rawValue: 0))
-
-        let data = CVPixelBufferGetBaseAddress(pixelBuffer!)
-        let rgbColorSpace = CGColorSpaceCreateDeviceRGB()
-        let context = CGContext(data: data, width: Int(size.width), height: Int(size.height), bitsPerComponent: 8, bytesPerRow: CVPixelBufferGetBytesPerRow(pixelBuffer!), space: rgbColorSpace, bitmapInfo: CGImageAlphaInfo.noneSkipFirst.rawValue)
-
-        context?.interpolationQuality = .high
-        context?.draw(image.cgImage!, in: CGRect(origin: .zero, size: size))
-
-        CVPixelBufferUnlockBaseAddress(pixelBuffer!, CVPixelBufferLockFlags(rawValue: 0))
-
-        return pixelBuffer
-    }
-
     func appendPixelBuffers(writerInput: AVAssetWriterInput, adaptor: AVAssetWriterInputPixelBufferAdaptor, frameDuration: CMTime, images: [UIImage], currentFrame: Int, lastImage: UIImage? = nil) async -> Bool {
         if writerInput.isReadyForMoreMediaData && currentFrame < images.count {
 
@@ -58,7 +32,7 @@ class VideoTemplateComposer {
                 UIGraphicsEndImageContext()
             }
 
-            if let pixelBuffer = createPixelBuffer(from: image, size: outputSize) {
+            if let pixelBuffer = image.createPixelBuffer(size: outputSize) {
                 logger.debug("Appending pixelBuffer for frame \(currentFrame)")
                 adaptor.append(pixelBuffer, withPresentationTime: CMTimeMultiply(frameDuration, multiplier: Int32(currentFrame)))
                 let nextFrame = currentFrame + 1
@@ -124,77 +98,13 @@ class VideoTemplateComposer {
         }
 
         // Load audio asset and merge it with the video
-        guard let audioAsset = loadAudioAsset(),
-              let outputAsset = await merge(videoAsset: videoAsset, audioAsset: audioAsset) else {
+        guard let audioAsset = AVAsset.loadAudioAsset(),
+              let outputAsset = await videoAsset.mergeVideoAsset(with: audioAsset) else {
             logger.error("Failed to merge audio with video.")
             return nil
         }
 
         logger.debug("Audio merged successfully.")
         return outputAsset
-    }
-
-    func merge(videoAsset: AVAsset, audioAsset: AVAsset) async -> AVAsset? {
-        let mixComposition = AVMutableComposition()
-
-        guard let videoTrack = mixComposition.addMutableTrack(withMediaType: .video, preferredTrackID: kCMPersistentTrackID_Invalid),
-              let audioTrack = mixComposition.addMutableTrack(withMediaType: .audio, preferredTrackID: kCMPersistentTrackID_Invalid) else {
-            return nil
-        }
-
-        do {
-            try await videoTrack.insertTimeRange(CMTimeRangeMake(start: .zero, duration: videoAsset.load(.duration)), of: videoAsset.loadTracks(withMediaType: .video)[0], at: .zero)
-            try await audioTrack.insertTimeRange(CMTimeRangeMake(start: .zero, duration: videoAsset.load(.duration)), of: audioAsset.loadTracks(withMediaType: .audio)[0], at: .zero)
-        } catch {
-            logger.error("Error merging video and audio tracks: \(error)")
-            return nil
-        }
-
-        return mixComposition
-    }
-
-    func loadAudioAsset() -> AVAsset? {
-        guard let audioURL = Bundle.main.url(forResource: "music", withExtension: "aac") else {
-            logger.error("Failed to find the audio file in resources.")
-            return nil
-        }
-        return AVAsset(url: audioURL)
-    }
-}
-
-extension AVAsset {
-    func saveTo(file: URL) -> Bool {
-        // Remove existing file if it exists
-        try? FileManager.default.removeItem(at: file)
-
-        // Create an export session
-        guard let exportSession = AVAssetExportSession(asset: self, presetName: AVAssetExportPresetHighestQuality) else {
-            logger.error("Failed to create export session.")
-            return false
-        }
-
-        exportSession.outputFileType = .mp4
-        exportSession.outputURL = file
-
-        let semaphore = DispatchSemaphore(value: 0)
-        var success = false
-
-        exportSession.exportAsynchronously {
-            switch exportSession.status {
-            case .completed:
-                logger.debug("Export completed successfully.")
-                success = true
-            case .failed:
-                logger.error("Export failed: \(String(describing: exportSession.error))")
-            case .cancelled:
-                logger.error("Export cancelled.")
-            default:
-                break
-            }
-            semaphore.signal()
-        }
-
-        semaphore.wait()
-        return success
     }
 }

@@ -11,7 +11,7 @@ import XCTest
 final class GlamTestTests: XCTestCase {
 
     lazy var videoProcessor: VideoTemplateComposer = VideoTemplateComposer()
-    lazy var imageProcessor: ImageProcessor = ImageProcessor()
+
     let imageNames = ["image-0", "image-1", "image-2", "image-3", "image-4", "image-5", "image-6", "image-7"]
     let modelName = "segmentation_8bit"
 
@@ -32,7 +32,7 @@ final class GlamTestTests: XCTestCase {
 
         let expectation = self.expectation(description: "Video processing completed")
 
-        let expandedImages = await appendVideoWithMLProcessedFrames(images: initialImages)
+        let expandedImages = await initialImages.withInsertedMLProcessedFrames
 
         let outputFileURL = URL(fileURLWithPath: NSTemporaryDirectory() + "output.mp4")
 
@@ -51,25 +51,25 @@ final class GlamTestTests: XCTestCase {
     }
 
     func testProcessPhoto() async {
-        let appendedImages = await appendVideoWithMLProcessedFrames(images: initialImages)
+        let appendedImages = await initialImages.withInsertedMLProcessedFrames
 
         for (index, image) in appendedImages.enumerated() {
-            print(saveImageToTmpFolder(image: image, filename: String(index)))
+            print(saveImageToTmpFolder(image: image, filename: "image-\(index)"))
         }
     }
 
     func testProcessHeatmap() async {
-        let size = CGSize(width: 1024, height: 1024)
         for (index, image) in initialImages.enumerated() {
-            let heatmap = await ImageProcessor().processImage(inputImage: image.resizedToSquare(size: .init(width: 1024, height: 1024)), modelName: "segmentation_8bit")!
-            print(saveImageToTmpFolder(image: heatmap, filename: String(index)))
+            let resizedImage = image.resizedToSquare()
+            let heatmap = await resizedImage.processImage(with: "segmentation_8bit")!
+            print(saveImageToTmpFolder(image: heatmap, filename: "heatmap-\(index)"))
         }
     }
 }
 
 
 fileprivate func saveImageToTmpFolder(image: UIImage, filename: String) -> URL? {
-    let fileURL = URL(fileURLWithPath: NSTemporaryDirectory() + "image-\(filename).jpg")
+    let fileURL = URL(fileURLWithPath: NSTemporaryDirectory() + "\(filename).jpg")
     guard let imageData = image.jpegData(compressionQuality: 1.0) else { return nil }
 
     do {
@@ -81,22 +81,3 @@ fileprivate func saveImageToTmpFolder(image: UIImage, filename: String) -> URL? 
         return nil
     }
 }
-
-fileprivate func appendVideoWithMLProcessedFrames(images: [UIImage]) async -> [UIImage] {
-    var resultImages: [UIImage] = []
-    let size = CGSize(width: 1024, height: 1024)
-
-    for imageToProcess in images {
-        let resizedImage = imageToProcess.resizedToSquare(size: size)
-        if resultImages.isEmpty {
-            resultImages.append(resizedImage)
-        } else {
-            let heatmap = await ImageProcessor().processImage(inputImage: resizedImage, modelName: "segmentation_8bit")!
-            let extractedImage = ImageProcessor().applyHeatMapThreshold(image: resizedImage, heatMap: heatmap)
-            resultImages.append(extractedImage!)
-            resultImages.append(resizedImage)
-        }
-    }
-    return resultImages
-}
-
