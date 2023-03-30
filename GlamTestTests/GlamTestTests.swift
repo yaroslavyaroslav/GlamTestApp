@@ -51,11 +51,18 @@ final class GlamTestTests: XCTestCase {
     }
 
     func testProcessPhoto() async {
-        let size = CGSize(width: 1024, height: 1024)
         let appendedImages = await appendVideoWithMLProcessedFrames(images: initialImages)
 
         for (index, image) in appendedImages.enumerated() {
             print(saveImageToTmpFolder(image: image, filename: String(index)))
+        }
+    }
+
+    func testProcessHeatmap() async {
+        let size = CGSize(width: 1024, height: 1024)
+        for (index, image) in initialImages.enumerated() {
+            let heatmap = await ImageProcessor().processImage(inputImage: image.resizedToSquare(size: .init(width: 1024, height: 1024)), modelName: "segmentation_8bit")!
+            print(saveImageToTmpFolder(image: heatmap, filename: String(index)))
         }
     }
 }

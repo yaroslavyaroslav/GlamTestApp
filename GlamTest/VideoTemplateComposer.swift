@@ -79,7 +79,7 @@ class VideoTemplateComposer {
             return nil
         }
 
-        let outputFileURL = URL(fileURLWithPath: NSTemporaryDirectory() + "output.mp4")
+        let outputFileURL = URL(fileURLWithPath: NSTemporaryDirectory() + "\(UUID()).mp4")
 
         try? FileManager.default.removeItem(at: outputFileURL)
 
@@ -125,7 +125,7 @@ class VideoTemplateComposer {
 
         // Load audio asset and merge it with the video
         guard let audioAsset = loadAudioAsset(),
-              let outputAsset = merge(videoAsset: videoAsset, audioAsset: audioAsset) else {
+              let outputAsset = await merge(videoAsset: videoAsset, audioAsset: audioAsset) else {
             logger.error("Failed to merge audio with video.")
             return nil
         }
@@ -134,7 +134,7 @@ class VideoTemplateComposer {
         return outputAsset
     }
 
-    func merge(videoAsset: AVAsset, audioAsset: AVAsset) -> AVAsset? {
+    func merge(videoAsset: AVAsset, audioAsset: AVAsset) async -> AVAsset? {
         let mixComposition = AVMutableComposition()
 
         guard let videoTrack = mixComposition.addMutableTrack(withMediaType: .video, preferredTrackID: kCMPersistentTrackID_Invalid),
@@ -143,8 +143,8 @@ class VideoTemplateComposer {
         }
 
         do {
-            try videoTrack.insertTimeRange(CMTimeRangeMake(start: .zero, duration: videoAsset.duration), of: videoAsset.tracks(withMediaType: .video)[0], at: .zero)
-            try audioTrack.insertTimeRange(CMTimeRangeMake(start: .zero, duration: videoAsset.duration), of: audioAsset.tracks(withMediaType: .audio)[0], at: .zero)
+            try await videoTrack.insertTimeRange(CMTimeRangeMake(start: .zero, duration: videoAsset.load(.duration)), of: videoAsset.loadTracks(withMediaType: .video)[0], at: .zero)
+            try await audioTrack.insertTimeRange(CMTimeRangeMake(start: .zero, duration: videoAsset.load(.duration)), of: audioAsset.loadTracks(withMediaType: .audio)[0], at: .zero)
         } catch {
             logger.error("Error merging video and audio tracks: \(error)")
             return nil
