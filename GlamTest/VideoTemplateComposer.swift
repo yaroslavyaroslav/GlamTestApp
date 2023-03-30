@@ -73,7 +73,7 @@ class VideoTemplateComposer {
         return false
     }
 
-    func processVideoFrames(images: [UIImage]) async -> URL? {
+    func processVideoFrames(images: [UIImage]) async -> AVAsset? {
         guard !images.isEmpty else {
             logger.error("Failed: no images provided.")
             return nil
@@ -103,35 +103,41 @@ class VideoTemplateComposer {
         videoWriter.startWriting()
         videoWriter.startSession(atSourceTime: .zero)
 
-        let frameDuration = CMTime(value: 1, timescale: 1)
+        let frameDuration = CMTime(value: 2, timescale: 3)
         let initialFrame = 0
 
+        let videoAsset: AVAsset
+
         if await appendPixelBuffers(writerInput: videoWriterInput, adaptor: pixelBufferAdaptor, frameDuration: frameDuration, images: images, currentFrame: initialFrame) {
-                videoWriterInput.markAsFinished()
-                await videoWriter.finishWriting()
-                if videoWriter.status == .completed {
-                    logger.debug("Video processing completed.")
-
-                    // Load audio asset and merge it with the video
-                    guard let audioAsset = loadAudioAsset(),
-                          let outputWithAudioURL = merge(videoURL: outputFileURL, audioAsset: audioAsset) else {
-                        logger.error("Failed to merge audio with video.")
-                        return nil
-                    }
-
-                    logger.debug("Audio merged successfully.")
-                    return outputWithAudioURL
-                }
+            videoWriterInput.markAsFinished()
+            await videoWriter.finishWriting()
+            if videoWriter.status == .completed {
+                logger.debug("Video processing completed.")
+                videoAsset = AVAsset(url: outputFileURL)
+            } else {
+                logger.error("Failed to appendPixelBuffers")
+                return nil
             }
-        logger.error("Failed to appendPixelBuffers")
-        return nil
+        } else {
+            logger.error("Failed to appendPixelBuffers")
+            return nil
+        }
+
+        // Load audio asset and merge it with the video
+        guard let audioAsset = loadAudioAsset(),
+              let outputAsset = merge(videoAsset: videoAsset, audioAsset: audioAsset) else {
+            logger.error("Failed to merge audio with video.")
+            return nil
+        }
+
+        logger.debug("Audio merged successfully.")
+        return outputAsset
     }
 
-    func merge(videoURL: URL, audioAsset: AVAsset) -> URL? {
+    func merge(videoAsset: AVAsset, audioAsset: AVAsset) -> AVAsset? {
         let mixComposition = AVMutableComposition()
 
-        guard let videoAsset = AVAsset(url: videoURL) as? AVURLAsset,
-              let videoTrack = mixComposition.addMutableTrack(withMediaType: .video, preferredTrackID: kCMPersistentTrackID_Invalid),
+        guard let videoTrack = mixComposition.addMutableTrack(withMediaType: .video, preferredTrackID: kCMPersistentTrackID_Invalid),
               let audioTrack = mixComposition.addMutableTrack(withMediaType: .audio, preferredTrackID: kCMPersistentTrackID_Invalid) else {
             return nil
         }
@@ -144,32 +150,7 @@ class VideoTemplateComposer {
             return nil
         }
 
-        let outputURL = URL(fileURLWithPath: NSTemporaryDirectory() + "output_with_audio.mp4")
-        try? FileManager.default.removeItem(at: outputURL)
-
-        guard let assetExport = AVAssetExportSession(asset: mixComposition, presetName: AVAssetExportPresetHighestQuality) else {
-            return nil
-        }
-
-        assetExport.outputFileType = .mp4
-        assetExport.outputURL = outputURL
-        assetExport.shouldOptimizeForNetworkUse = true
-
-        let semaphore = DispatchSemaphore(value: 0)
-        var exportSuccess = false
-
-        assetExport.exportAsynchronously {
-            if assetExport.status == .completed {
-                exportSuccess = true
-            } else {
-                logger.error("Failed to export merged video and audio: \(String(describing: assetExport.error))")
-            }
-            semaphore.signal()
-        }
-
-        semaphore.wait()
-
-        return exportSuccess ? outputURL : nil
+        return mixComposition
     }
 
     func loadAudioAsset() -> AVAsset? {
@@ -178,5 +159,42 @@ class VideoTemplateComposer {
             return nil
         }
         return AVAsset(url: audioURL)
+    }
+}
+
+extension AVAsset {
+    func saveTo(file: URL) -> Bool {
+        // Remove existing file if it exists
+        try? FileManager.default.removeItem(at: file)
+
+        // Create an export session
+        guard let exportSession = AVAssetExportSession(asset: self, presetName: AVAssetExportPresetHighestQuality) else {
+            logger.error("Failed to create export session.")
+            return false
+        }
+
+        exportSession.outputFileType = .mp4
+        exportSession.outputURL = file
+
+        let semaphore = DispatchSemaphore(value: 0)
+        var success = false
+
+        exportSession.exportAsynchronously {
+            switch exportSession.status {
+            case .completed:
+                logger.debug("Export completed successfully.")
+                success = true
+            case .failed:
+                logger.error("Export failed: \(String(describing: exportSession.error))")
+            case .cancelled:
+                logger.error("Export cancelled.")
+            default:
+                break
+            }
+            semaphore.signal()
+        }
+
+        semaphore.wait()
+        return success
     }
 }

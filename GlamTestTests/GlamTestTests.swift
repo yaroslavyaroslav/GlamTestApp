@@ -12,7 +12,7 @@ final class GlamTestTests: XCTestCase {
 
     lazy var videoProcessor: VideoTemplateComposer = VideoTemplateComposer()
     lazy var imageProcessor: ImageProcessor = ImageProcessor()
-    let imageNames = ["image-0", "image-1", "image-2", "image-3", "image-4", "image-5", "image-5", "image-6", "image-7"]
+    let imageNames = ["image-0", "image-1", "image-2", "image-3", "image-4", "image-5", "image-6", "image-7"]
     let modelName = "segmentation_8bit"
 
     lazy var initialImages: [UIImage] = {
@@ -34,13 +34,17 @@ final class GlamTestTests: XCTestCase {
 
         let expandedImages = await appendVideoWithMLProcessedFrames(images: initialImages)
 
-        if let outputURL = await videoProcessor.processVideoFrames(images: expandedImages) {
-            print("result: \(outputURL.absoluteString)")
-            expectation.fulfill()
-        } else {
-            XCTFail("Video processing failed")
-            expectation.fulfill()
-            return
+        let outputFileURL = URL(fileURLWithPath: NSTemporaryDirectory() + "output.mp4")
+
+        let videoComposer = VideoTemplateComposer()
+        if let videoAsset = await videoComposer.processVideoFrames(images: expandedImages) {
+            if videoAsset.saveTo(file: outputFileURL) {
+                print("result: \(outputFileURL.absoluteString)")
+                expectation.fulfill()
+            } else {
+                XCTFail("Video processing failed")
+                expectation.fulfill()
+            }
         }
 
         await fulfillment(of: [expectation], timeout: 30)
