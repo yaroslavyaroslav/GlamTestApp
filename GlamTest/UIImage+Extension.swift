@@ -38,19 +38,6 @@ extension UIImage {
         return pixelBuffer
     }
 
-    func resizedToSquare(size: CGSize = .init(width: 1024, height: 1024)) -> UIImage {
-        UIGraphicsBeginImageContextWithOptions(size, true, 1.0)
-        let aspectRatio = self.size.width / self.size.height
-        let drawWidth = aspectRatio >= 1 ? size.width : size.width * aspectRatio
-        let drawHeight = aspectRatio <= 1 ? size.height : size.height / aspectRatio
-        let drawRect = CGRect(x: (size.width - drawWidth) / 2, y: (size.height - drawHeight) / 2, width: drawWidth, height: drawHeight)
-        self.draw(in: drawRect)
-        let resizedImage = UIGraphicsGetImageFromCurrentImageContext()!
-        UIGraphicsEndImageContext()
-        logger.debug("\(resizedImage.size.debugDescription)")
-        return resizedImage
-    }
-
     // I have to admit that the object extraction feature works pretty bad with both given dataset and a model
     // yet I'm stating that this is the model scope of responsibility, sice as long as I see its preformance to detect this kind of objects placed in that environment is unstatisfailable.
     // Therefore model is the one what has to be improved not the app logic related to it.
@@ -94,8 +81,6 @@ extension UIImage {
         let modelURL = Bundle.main.url(forResource: modelName, withExtension: "mlmodelc")!
         let model = try! VNCoreMLModel(for: MLModel(contentsOf: modelURL))
 
-        let resizedImage = self
-
         return await withCheckedContinuation { continuation in
             let request = VNCoreMLRequest(model: model) { (request, error) in
                 if let error = error {
@@ -116,11 +101,37 @@ extension UIImage {
                     continuation.resume(returning: nil)
                 }
             }
-            
-            // Create a request handler and perform the request
-            let handler = VNImageRequestHandler(cgImage: resizedImage.cgImage!, options: [:])
+
+            let handler = VNImageRequestHandler(cgImage: self.cgImage!, options: [:])
             try! handler.perform([request])
         }
+    }
+
+    func resizedToSquare(size: CGSize = .init(width: 1024, height: 1024)) -> UIImage {
+        let aspectRatio = self.size.width / self.size.height
+        let drawWidth = aspectRatio >= 1 ? size.width : size.width * aspectRatio
+        let drawHeight = aspectRatio <= 1 ? size.height : size.height / aspectRatio
+        let drawRect = CGRect(x: (size.width - drawWidth) / 2, y: (size.height - drawHeight) / 2, width: drawWidth, height: drawHeight)
+
+        UIGraphicsBeginImageContextWithOptions(size, true, 1.0)
+        self.draw(in: drawRect)
+        let resizedImage = UIGraphicsGetImageFromCurrentImageContext()!
+        UIGraphicsEndImageContext()
+
+        return resizedImage
+    }
+
+    func scaleToOriginalRatio(size: CGSize) -> UIImage {
+        let delta = size.height - size.width
+        let drawRect = CGRect(x: -delta / 2, y: 0, width: size.width + delta, height: size.height)
+
+        UIGraphicsBeginImageContextWithOptions(size, false, 1.0)
+        self.draw(in: drawRect)
+        let scaledImage = UIGraphicsGetImageFromCurrentImageContext()!
+        UIGraphicsEndImageContext()
+
+        logger.debug("scaledImage: \(scaledImage.size.debugDescription)")
+        return scaledImage
     }
 }
 
@@ -129,15 +140,19 @@ extension Array where Element == UIImage {
         get async {
             var resultImages: [UIImage] = []
 
+            guard let originSize = self.first?.size else { return [] }
+
             for imageToProcess in self {
                 let resizedImage = imageToProcess.resizedToSquare()
+
                 if resultImages.isEmpty {
-                    resultImages.append(resizedImage)
+                    resultImages.append(resizedImage.scaleToOriginalRatio(size: originSize))
                 } else {
                     let heatmap = await resizedImage.processImage(with: "segmentation_8bit")!
-                    let extractedImage = resizedImage.applyHeatMap(heatMap: heatmap)
-                    resultImages.append(extractedImage!)
-                    resultImages.append(resizedImage)
+                    let extractedImage = resizedImage.applyHeatMap(heatMap: heatmap)!
+
+                    resultImages.append(extractedImage.scaleToOriginalRatio(size: originSize))
+                    resultImages.append(resizedImage.scaleToOriginalRatio(size: originSize))
                 }
             }
             return resultImages

@@ -10,8 +10,6 @@ import XCTest
 
 final class GlamTestTests: XCTestCase {
 
-    lazy var videoProcessor: VideoTemplateComposer = VideoTemplateComposer()
-
     let imageNames = ["image-0", "image-1", "image-2", "image-3", "image-4", "image-5", "image-6", "image-7"]
     let modelName = "segmentation_8bit"
 
@@ -36,7 +34,11 @@ final class GlamTestTests: XCTestCase {
 
         let outputFileURL = URL(fileURLWithPath: NSTemporaryDirectory() + "output.mp4")
 
-        let videoComposer = VideoTemplateComposer()
+        let originalSize = initialImages.first!.size
+
+        let processedSize = initialImages.first!.resizedToSquare().scaleToOriginalRatio(size: originalSize).size
+
+        let videoComposer = VideoTemplateComposer(outputSize: initialImages.first!.size)
         if let videoAsset = await videoComposer.processVideoFrames(images: expandedImages) {
             if videoAsset.saveTo(file: outputFileURL) {
                 print("result: \(outputFileURL.absoluteString)")

@@ -15,7 +15,11 @@ private let logger = Logger(subsystem: "Services", category: "VideoTemplateCompo
 
 class VideoTemplateComposer {
     // Later make something cooler.
-    private let outputSize = CGSize(width: 1024, height: 1024)
+    private let outputSize: CGSize
+
+    init(outputSize: CGSize) {
+        self.outputSize = outputSize
+    }
 
     func appendPixelBuffers(writerInput: AVAssetWriterInput, adaptor: AVAssetWriterInputPixelBufferAdaptor, frameDuration: CMTime, images: [UIImage], currentFrame: Int, lastImage: UIImage? = nil) async -> Bool {
         if writerInput.isReadyForMoreMediaData && currentFrame < images.count {
